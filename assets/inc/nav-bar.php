@@ -1,12 +1,26 @@
+<?php include('controler.php'); ?>
 <header class="headerbar">
     <img class="logo" src="assets/img/logo.png" alt="logo">
     <div class="btn-group-action">
-        <a href="">
-            <button class="btn btn-dark">Se connecter</button>
-        </a>
-        <a href="">
-            <button class="btn btn-outline-dark">S'inscrire</button>
-        </a>
+        <?php
+            if ($_SESSION['connected']) {
+                ?>
+                <span>Bienvenue <?php echo $_SESSION['second_name']; ?> !</span>
+                <a href="controler.php?action=disconnect">
+                    <button class="btn btn-danger">Se déconnecter</button>
+                </a>
+                <?php
+            } else {
+                ?>
+                <a href="login.php">
+                    <button class="btn btn-dark">Se connecter</button>
+                </a>
+                <a href="signin.php">
+                    <button class="btn btn-outline-dark">S'inscrire</button>
+                </a>
+                <?php
+            }
+        ?>
     </div>
 </header>
 <div class="wrapper active">
@@ -16,7 +30,7 @@
                 <a id="menu-toggle" href="#">Menu<span id="main_icon" class="fa fa-align-justify"></span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="accueil.php">Accueil</a>
+                <a class="nav-link" href="./">Accueil</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="boutique.php">Boutique</a>
