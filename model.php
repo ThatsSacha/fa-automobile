@@ -163,4 +163,24 @@ class SQL {
 
         return $fetch;
     }
+
+    public function addComment($user_id, $topic_id, $comment) {
+        $bdd = $this->connect();
+        
+        $insert = $bdd->prepare('INSERT INTO comment (user_id, topic_id, comment) VALUES(:user_id, :topic_id, :comment)');
+        $insert->execute(array(
+            ':user_id' => $user_id,
+            ':topic_id' => $topic_id,
+            ':comment' => $comment
+        ));
+    }
+
+    public function getComments($topic_id) {
+        $bdd = $this->connect();
+
+        $select = $bdd->query('SELECT * FROM comment WHERE topic_id = "'. $topic_id .'"');
+        $fetch = $select->fetchAll();
+
+        return $fetch;
+    }
 }

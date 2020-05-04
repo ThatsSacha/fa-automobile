@@ -17,7 +17,24 @@
 	<body>
 		<?php include('assets/inc/nav-bar.php'); ?>
         <main>
-			
+			<?= $render_topic_id ?>
+			<?= $render_comments ?>
+			<?php
+				if ($_SESSION['connected']) {
+					?>
+					<form action="controler.php?i=<?= $_GET['i'] ?>" method="POST">
+						<textarea class="add-comment form-control" name="comment" placeholder="Votre commentaire" required></textarea>
+						<input type="submit" class="btn btn-success" name="submit-add-comment" value="Commenter">
+					</form>
+					<?php
+				} else {
+					?>
+					<a href="login.php">
+						<button class="btn btn-primary">Se connecter pour commenter</button>
+					</a>
+					<?php
+				}
+			?>
         </main>
 		<?php include('assets/inc/footer.php'); ?>
 	</body>

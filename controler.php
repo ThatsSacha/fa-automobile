@@ -237,7 +237,7 @@
                 $date = date($topic['date_posted']);
 
                 foreach($users as $user) {
-                    $render_topic .= '<div class="card topic-container">
+                    $render_topic .= '<div class="card topic-container m-bottom">
                                         <div class="card-header">
                                             Par '. $user['second_name'] .' '. $user['first_name'] .'
                                         </div>
@@ -249,11 +249,42 @@
                                     </div>';
                 }
             }
-        } else if ($_GET['action'] == 'topic' && isset($_GET['i']) && is_numeric($_GET['i']) && $_GET['i'] > 0) {
+        } else if ($_GET['action'] == 'get-topic' && isset($_GET['i']) && is_numeric($_GET['i']) && $_GET['i'] > 0) {
             $topics = $sql->getTopicById($_GET['i']);
-
-            foreach($topics as $topic) {
-                //$render_topic_id .= 
+            
+            if (count($topics) > 0) {
+                foreach($topics as $topic) {
+                    $users = $sql->getUserById($topic['user_id']);
+    
+                    foreach($users as $user) {
+                        $render_topic_id .= '<div class="card topic-container m-bottom">
+                                                <div class="card-header">
+                                                    Par '. $user['second_name'] .' '. $user['first_name'] .'
+                                                </div>
+                                                <div class="card-body">
+                                                    <h5 class="card-title">'. $topic['title'] .'</h5>
+                                                    <p class="card-text">'. $topic['topic'] .'</p>
+                                                </div>
+                                            </div>';
+                    }
+                }
+    
+                $comments = $sql->getComments($_GET['i']);
+    
+                foreach($comments as $comment) {
+                    $users = $sql->getUserById($comment['user_id']);
+    
+                    foreach($users as $user) {
+                        $render_comments .= '<div class="comment-container m-bottom">
+                                                <div class="comment-header">
+                                                    '. $user['second_name'] .' '. $user['first_name'] .' a commenté :
+                                                </div>
+                                                <p>'. $comment['comment'] .'</p>
+                                            </div>';
+                    }
+                }
+            } else {
+                header('Location: forum.php?action=forum');
             }
         }
         /*else if ($_GET['action'] == 'home') {
@@ -346,6 +377,15 @@
             }
         } else {
             echo 'Vous devez vous connecter';
+        }
+    }
+    //
+    // ADD COMMENT
+    if (isset($_POST['submit-add-comment']) && isset($_GET['i']) && is_numeric($_GET['i'])) {
+        if ($_SESSION['connected'] && isset($_SESSION['id'])) {
+            $comment = htmlspecialchars($_POST['comment']);
+            $sql->addComment($_SESSION['id'], $_GET['i'], $comment);
+            header('Location: topic.php?action=get-topic&i='. $_GET['i']);
         }
     }
     //

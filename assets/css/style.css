@@ -87,6 +87,7 @@ body main {
   /*height: 525px;*/
   height: 100%;
   text-align: center;
+  padding-top: 20px;
 }
 body main.j-center {
   justify-content: center;
@@ -121,6 +122,14 @@ body main form input, body main form select, body main form textarea {
 body main form textarea.form-control {
   resize: none;
   height: 90px;
+}
+body main form textarea.add-comment {
+  width: 100%;
+  height: 50px;
+  transition: 300ms;
+}
+body main form textarea.add-comment.focus {
+  height: 200px;
 }
 body main .dashboard-nav {
   height: 10%;
@@ -195,4 +204,20 @@ body main .shop-cage {
   flex-wrap: wrap;
   justify-content: space-evenly;
   height: 100%;
+}
+body main .comment-container {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  background-color: #e4e4e4;
+  padding: 5px 10px 5px 10px;
+  border: 1px solid #bfbcbc;
+  border-radius: 5px;
+}
+body main .comment-container .comment-header {
+  font-weight: 700;
+}
+body main .m-bottom {
+  margin-bottom: 20px;
 }

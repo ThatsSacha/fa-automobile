@@ -17,4 +17,8 @@ $(function() {
             $('section.admin').removeClass('hidden');
         }
     });
+
+    $('.add-comment').on('focus', function() {
+        $(this).addClass('focus');
+    });
 });

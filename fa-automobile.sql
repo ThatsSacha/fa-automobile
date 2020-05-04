@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:8889
--- Generation Time: May 04, 2020 at 03:54 PM
+-- Generation Time: May 04, 2020 at 05:01 PM
 -- Server version: 5.7.24
 -- PHP Version: 7.3.7
 
@@ -21,6 +21,20 @@ SET time_zone = "+00:00";
 --
 -- Database: `fa-automobile`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `comment`
+--
+
+CREATE TABLE `comment` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `topic_id` int(11) NOT NULL,
+  `comment` text NOT NULL,
+  `date_comment` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -125,6 +139,14 @@ INSERT INTO `vehicle` (`id`, `mark_id`, `model`, `description`, `price`, `v_year
 --
 
 --
+-- Indexes for table `comment`
+--
+ALTER TABLE `comment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `topic_id` (`topic_id`);
+
+--
 -- Indexes for table `historic`
 --
 ALTER TABLE `historic`
@@ -162,6 +184,12 @@ ALTER TABLE `vehicle`
 --
 
 --
+-- AUTO_INCREMENT for table `comment`
+--
+ALTER TABLE `comment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `historic`
 --
 ALTER TABLE `historic`
@@ -177,7 +205,7 @@ ALTER TABLE `mark`
 -- AUTO_INCREMENT for table `topic`
 --
 ALTER TABLE `topic`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user`
