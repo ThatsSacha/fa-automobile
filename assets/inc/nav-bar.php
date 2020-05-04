@@ -2,10 +2,16 @@
 <header class="headerbar">
     <img class="logo" src="assets/img/logo.png" alt="logo">
     <div class="btn-group-action">
+        <a href="shop-cage.php?action=shop-cage">
+            <button class="btn btn-dark">Mon panier</button>
+        </a>
         <?php
             if ($_SESSION['connected']) {
                 ?>
                 <span>Bienvenue <?php echo $_SESSION['second_name']; ?> !</span>
+                <a href="dashboard.php?action=dashboard">
+                    <button class="btn btn-outline-dark">Dashboard</button>
+                </a>
                 <a href="controler.php?action=disconnect">
                     <button class="btn btn-danger">Se déconnecter</button>
                 </a>
@@ -30,19 +36,11 @@
                 <a id="menu-toggle" href="#">Menu<span id="main_icon" class="fa fa-align-justify"></span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="./">Accueil</a>
+                <a class="nav-link" href="./?action=home">Accueil</a>
             </li>
+            <?= $data_marks ?>
             <li class="nav-item">
-                <a class="nav-link" href="boutique.php">Boutique</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="bde.php">BDE</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="events.php">Evenements</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="associations.php">Associations</a>
+                <a class="nav-link" href="forum.php?action=forum">Forum</a>
             </li>
         </ul>
         <div class="logo-container">

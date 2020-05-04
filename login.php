@@ -18,12 +18,12 @@
 			</head>
 			<body>
 				<?php include('assets/inc/nav-bar.php'); ?>
-				<main>
+				<main class="j-center">
 					<h1>Connexion</h1>
 					<form action="controler.php" method="POST">
 						<input type="email" name="mail" class="form-control" placeholder="Votre adresse mail" autofocus required>
 						<input type="password" name="password" class="form-control" placeholder="Votre mot de passe" required>
-						<input type="submit" name="submit-login" class="btn btn-primary" value="S'inscrire">
+						<input type="submit" name="submit-login" class="btn btn-primary" value="Se connecter">
 					</form>
 					<span>Vous n'avez pas de compte ? <a href="signin.php">Inscrivez-vous !</a></span>
 				</main>
@@ -32,6 +32,6 @@
 		</html>
 		<?php
 	} else {
-		header('Location: dashboard.php');
+		header('Location: dashboard.php?action=dashboard');
 	}
 ?>

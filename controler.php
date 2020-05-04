@@ -12,6 +12,18 @@
 
     $sql = new SQL;
 
+    if (!isset($_SESSION['shop-cage'])) {
+        $_SESSION['shop-cage'] = array();
+    }
+
+    $marks = $sql->getMarks();
+
+    foreach($marks as $mark) {
+        $data_marks .= '<li class="nav-item">
+                            <a class="nav-link" href="store.php?m='. $mark['id'] .'">'. $mark['mark'] .'</a>
+                        </li>';
+    }
+
     if (isset($_POST['submit-signin']) || isset($_POST['submit-login'])) {
         $first_name = htmlspecialchars($_POST['first-name']);
         $second_name = htmlspecialchars($_POST['second-name']);
@@ -51,8 +63,11 @@
                             </html>';
 
                     sendMail($u_mail, $subject, $body);
-                    connectUser($first_name, $second_name, $u_mail, $admin);
-                    header('Location: dashboard.php');
+                    $users = $sql->checkMail($u_mail);
+                    foreach ($users as $user) {
+                        connectUser($user['id'], $first_name, $second_name, $u_mail, $admin);
+                    }
+                    header('Location: dashboard.php?action=dashboard');
                 } else {
                     echo 'Un compte existe déjà avec l\'adresse mail ' . $u_mail;
                 }
@@ -65,8 +80,8 @@
             if (count($users) > 0) {
                 foreach ($users as $user) {
                     if ($password == $user['password']) {
-                        connectUser($user['first_name'], $user['second_name'], $user['mail'], $user['admin']);
-                        header('Location: dashboard.php');
+                        connectUser($user['id'], $user['first_name'], $user['second_name'], $user['mail'], $user['admin']);
+                        header('Location: dashboard.php?action=dashboard');
                     } else {
                         echo 'L\'adresse mail ou le mot de passe ne correspond pas';
                     }
@@ -79,16 +94,261 @@
         }
     }
 
+    if (isset($_POST['submit-mark'])) {
+        $mark = htmlspecialchars($_POST['mark']);
+
+        if (!empty($mark)) {
+            $sql->addMark($mark);
+            header('Location: dashboard.php?action=dashboard');
+        }
+    }
+
+    if (isset($_POST['submit-vehicle'])) {
+        $mark = htmlspecialchars($_POST['mark-select']);
+        $model = htmlspecialchars($_POST['model']);
+        $description = htmlspecialchars($_POST['description']);
+        $price = htmlspecialchars($_POST['price']);
+        $year = htmlspecialchars($_POST['year']);
+        $picture_name = htmlspecialchars($_FILES['picture']['name']);
+
+        if ($mark != 0 && !empty($model) && !empty($price) && !empty($year) && !empty($picture_name)) {
+            if ($_FILES['picture']['error'] == 0) {
+                $picture_extension = pathinfo($picture_name);
+                $extensions = array('jpg', 'jpeg', 'JPEG', 'JPG', 'PNG', 'png', 'gif');
+                $move = __DIR__.'/assets/img/vehicles/' . basename($picture_name);
+                
+                if (in_array($picture_extension['extension'], $extensions)) {
+                    if (file_exists($move)) {
+                        echo 'Cette image existe déjà';
+                    } else {
+                        if (move_uploaded_file($_FILES['picture']['tmp_name'], $move)) {
+                            $sql->addVehicle($mark, $model, $description, $price, $year, $picture_name);
+                            header('Location: dashboard.php?action=dashboard');
+                        } else {
+                            echo 'Une erreur est survenue lors de l\'envoi de l\'image dans '. $move;
+                        }
+                    }
+                } else {
+                    echo 'L\'extension n\'est pas autorisée';
+                }
+            } else {
+                echo 'Un problème est survenu au chargement de l\'image';
+            }
+        }
+    }
+
     if (isset($_GET['action'])) {
         if ($_GET['action'] == 'disconnect') {
             session_destroy();
-            header('Location: http://localhost:8888/ProjetWeb');
+            header('Location: http://localhost/ProjetWeb');
         } else if ($_GET['action'] == 'delete' && $_SESSION['connected'] && !empty($_SESSION['mail'])) {
             $sql->deleteAccount($_SESSION['mail']);
             session_destroy();
-            header('Location: ./');
+            header('Location: ./?action=home');
+        } else if ($_GET['action'] == 'dashboard') {
+            $marks = $sql->getMarks();
+
+            foreach($marks as $mark) {
+                $v_marks .= '<option value="'. $mark['id'] .'">'. $mark['mark'] .'</option>';
+            }
+
+            $activities = $sql->getHistoric($_SESSION['id']);
+            foreach($activities as $activity) {
+                if ($activity['table_db'] == 'vehicle') {
+                    $vehicles = $sql->getVehiclesById($activity['element_id']);
+
+                    foreach($vehicles as $vehicle) {
+                        $date = date('d/m/Y à H:i', $vehicle['date_action']);
+                        $historic .= '<div class="historic-container">Achat: '. $vehicle['model'] .' - '. $vehicle['v_year'] .' - '. $vehicle['price'] .'€, le '. $date .'</div>';
+                    }
+                }
+            }
+
+        } else if ($_GET['action'] == 'shop-cage') {
+            for ($i = 0; $i < count($_SESSION['shop-cage']); $i++) {
+                foreach ($_SESSION['shop-cage'][$i] as $id) {
+                    $vehicles = $sql->getVehiclesById($id);
+                    
+                    foreach($vehicles as $vehicle) {
+                        $shop_cage_vehicles .= '<div class="card" style="width: 18rem;">
+                                                <img src="assets/img/vehicles/'. $vehicle['picture'] .'" class="card-img-top" alt="'. $vehicle['model'] .'">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">'. $vehicle['model'] .'</h5>
+                                                    <p class="card-text">'. $vehicle['description'] .'</p>
+                                                    <div class="card-number">
+                                                        <span>'. $vehicle['v_year'] .'</span>
+                                                        <span>'. number_format($vehicle['price']) .'€</span>
+                                                    </div>
+                                                    <a href="controler.php?action=remove-shop-cage&i='. $vehicle['id'] .'" class="btn btn-danger">Retirer du panier</a>
+                                                </div>
+                                            </div>';
+                    }
+                }
+            }
+        } else if ($_GET['action'] == 'remove-shop-cage' && isset($_GET['i']) && is_numeric($_GET['i']) && $_GET['i'] > 0 && $_GET['i'] < 999) {
+            for($i = 0; $i < count($_SESSION['shop-cage']); $i++) {
+                foreach($_SESSION['shop-cage'][$i] as $key => $value) {
+                    if ($_GET['i'] == $key) {
+                        unset($_SESSION['shop-cage'][$i][$key]);
+                        var_dump($_SESSION['shop-cage'] . '<br/>');
+                        //unset($_SESSION['shop-cage'][$i]);
+                        header('Location: shop-cage.php?action=shop-cage');
+                    }
+                }
+            }
+        } else if ($_GET['action'] == 'validate-shop-cage') {
+            $product_body;
+            if ($_SESSION['connected'] && isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+                for ($i = 0; $i < count($_SESSION['shop-cage']); $i++) {
+                    foreach($_SESSION['shop-cage'][$i] as $key => $value) {
+                        $sql->addHistoric('vehicle', $_SESSION['id'], $key);
+                        $vehicles = $sql->getVehiclesById($key);
+
+                        foreach($vehicles as $vehicle) {
+                            $product_body .= '<span>'. $vehicle['model'] .' - '. $vehicle['v_year'] .' - </span>
+                                            <span>'. $vehicle['price'] .'€</span><br/>';
+                        }
+                    }
+                }
+
+                $body = '<html>
+                                <head>
+                                    <link href="https://fonts.googleapis.com/css?family=Montserrat:200,400&display=swap" rel="stylesheet">
+                                </head>
+                                <body style="text-align: center; font-family: "Montserrat"; font-size: 13px; font-weight: 200;">
+                                    <h1 style="font-weight: 400; font-size: 20px;">Merci d\'avoir passé commande '. $_SESSION['second_name'] .' !</h1>
+                                    <p>Votre commande 👇</p>
+                                    '. $product_body .'
+                                </body>
+                            </html>';
+
+                sendMail($_SESSION['mail'], 'Commande validée !', $body);
+                unset($_SESSION['shop-cage']);
+                header('Location: dashboard.php?action=dashboard');
+            } else {
+                echo 'Vous devez êtes connecté pour passer une commande';
+            }
+            
+        } else if ($_GET['action'] == 'forum') {
+            $topics = $sql->getLastTopics();
+
+            foreach ($topics as $topic) {
+                $users = $sql->getUserById($topic['user_id']);
+                $date = date($topic['date_posted']);
+
+                foreach($users as $user) {
+                    $render_topic .= '<div class="card topic-container">
+                                        <div class="card-header">
+                                            Par '. $user['second_name'] .' '. $user['first_name'] .'
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="card-title">'. $topic['title'] .'</div>
+                                            <p class="card-text">Le '. $date .'</p>
+                                            <a href="topic.php?action=get-topic&i='. $topic['id'] .'" class="btn btn-primary">Voir ce topic</a>
+                                        </div>
+                                    </div>';
+                }
+            }
+        } else if ($_GET['action'] == 'topic' && isset($_GET['i']) && is_numeric($_GET['i']) && $_GET['i'] > 0) {
+            $topics = $sql->getTopicById($_GET['i']);
+
+            foreach($topics as $topic) {
+                //$render_topic_id .= 
+            }
+        }
+        /*else if ($_GET['action'] == 'home') {
+            $vehicles = $sql->getHomeVehicles();
+            //Boucle sur chaque véhicule puis dans chaque mark
+            foreach ($vehicles as $vehicle) {
+                $marks = $sql->getMarksById($vehicle['mark_id']);
+
+                foreach ($marks as $mark) {
+                    $data_vehicles .= '<h2>'. $mark['mark'] .'</h2>
+                                        <div class="card-container">
+                                            <div class="card" style="width: 18rem;">
+                                                <img src="assets/img/vehicles/'. $vehicle['picture'] .'" class="card-img-top" alt="'. $vehicle['model'] .'">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">'. $vehicle['model'] .'</h5>
+                                                    <p class="card-text">'. $vehicle['description'] .'</p>
+                                                    <div class="card-number">
+                                                        <span>'. $vehicle['v_year'] .'</span>
+                                                        <span>'. number_format($vehicle['price']) .'€</span>
+                                                    </div>
+                                                    <a href="#" class="btn btn-success">Ajouter au panier</a>
+                                                </div>
+                                            </div>
+                                        </div>';
+                }
+            }
+        }*/
+    }
+
+    if (isset($_POST['submit-add-shop'])) {
+        $id = htmlspecialchars($_POST['id-vehicle']);
+        $price = htmlspecialchars($_POST['price']);
+
+        if (!empty($id) && is_numeric($id) && $id > 0 && !empty($price) && is_numeric($price) && $price > 0) {
+            array_push($_SESSION['shop-cage'], array($id => $id));
+            header('Location: shop-cage.php?action=shop-cage');
         }
     }
+
+    if (isset($_GET['m'])) {
+        if (is_numeric($_GET['m']) && $_GET['m'] > 0 && $_GET['m'] < 999) {
+            $vehicles = $sql->getVehicles($_GET['m']);
+
+            foreach($vehicles as $vehicle) {
+                $data_vehicles .= '<div class="card" style="width: 18rem;">
+                                        <img src="assets/img/vehicles/'. $vehicle['picture'] .'" class="card-img-top" alt="'. $vehicle['model'] .'">
+                                        <div class="card-body">
+                                            <h5 class="card-title">'. $vehicle['model'] .'</h5>
+                                            <p class="card-text">'. $vehicle['description'] .'</p>
+                                            <div class="card-number">
+                                                <span>'. $vehicle['v_year'] .'</span>
+                                                <span>'. number_format($vehicle['price']) .'€</span>
+                                            </div>
+                                            <form action="controler.php" method="POST">
+                                                <input type="hidden" name="id-vehicle" value="'. $vehicle['id'] .'">
+                                                <input type="hidden" name="price" value="'. $vehicle['price'] .'">
+                                                <input type="submit" name="submit-add-shop" class="btn btn-success" value="Ajouter au panier">
+                                            </form>
+                                            <!--<a href="controler.php?action=add-shop-cage&i='. $vehicle['id'] .'" class="btn btn-success">Ajouter au panier</a>-->
+                                        </div>
+                                    </div>';
+                
+                $img .= '<div class="carousel-item">
+                            <img src="assets/img/vehicles/'. $vehicle['picture'] .'" class="d-block w-100" alt="'. $vehicle['model'] .'">
+                        </div>';
+            }
+
+            for ($i = 0; $i < count($vehicles); $i++) {
+                if (count($vehicles) == 1) {
+                    $i += 1;
+                    $indicator .= '<li data-target="#carouselExampleIndicators" data-slide-to="'. $i .'"></li>';
+                } else {
+                    $indicator .= '<li data-target="#carouselExampleIndicators" data-slide-to="'. $i .'"></li>';
+                }
+            }
+        }
+    }
+
+    // ADD TOPIC
+    if (isset($_POST['submit-add-topic'])) {
+        if ($_SESSION['connected'] && isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+            $title = htmlspecialchars($_POST['topic-title']);
+            $topic = htmlspecialchars($_POST['topic']);
+
+            if (!empty($title) && !empty($topic)) {
+                $sql->addTopic($_SESSION['id'], $title, $topic);
+                header('Location: forum.php?action=forum');
+            } else {
+                echo 'Tous les champs doivent êtres remplis';
+            }
+        } else {
+            echo 'Vous devez vous connecter';
+        }
+    }
+    //
 
     function sendMail($receiver, $subject, $body) {
         $mail = new PHPMailer;
@@ -114,13 +374,14 @@
         }
     }
 
-    function connectUser($first_name, $second_name, $mail, $admin) {
+    function connectUser($id, $first_name, $second_name, $mail, $admin) {
         if ($admin == 0) {
             $admin = false;
         } else {
             $admin = true;
         }
 
+        $_SESSION['id'] = $id;
         $_SESSION['first_name'] = $first_name;
         $_SESSION['second_name'] = $second_name;
         $_SESSION['mail'] = $mail;

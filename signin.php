@@ -18,7 +18,7 @@
 			</head>
 			<body>
 				<?php include('assets/inc/nav-bar.php'); ?>
-					<main>
+					<main class="j-center">
 						<h1>Inscription</h1>
 						<form action="controler.php" method="POST">
 							<input type="text" name="first-name" class="form-control" placeholder="Votre nom" autofocus required>
@@ -34,6 +34,6 @@
 		</html>
 		<?php
 	} else {
-		header('Location: dashboard.php');
+		header('Location: dashboard.php?action=dashboard');
 	}
 ?>
