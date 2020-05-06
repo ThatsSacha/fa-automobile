@@ -140,7 +140,7 @@
     if (isset($_GET['action'])) {
         if ($_GET['action'] == 'disconnect') {
             session_destroy();
-            header('Location: http://localhost/ProjetWeb');
+            header('Location: ./');
         } else if ($_GET['action'] == 'delete' && $_SESSION['connected'] && !empty($_SESSION['mail'])) {
             $sql->deleteAccount($_SESSION['mail']);
             session_destroy();
@@ -160,6 +160,26 @@
                     foreach($vehicles as $vehicle) {
                         $date = date('d/m/Y à H:i', $vehicle['date_action']);
                         $historic .= '<div class="historic-container">Achat: '. $vehicle['model'] .' - '. $vehicle['v_year'] .' - '. $vehicle['price'] .'€, le '. $date .'</div>';
+                    }
+                } else if ($activity['table_db'] == 'topic') {
+                    $topics = $sql->getTopicByUserId($activity['user_id']);
+                    foreach ($topics as $topic) {
+                        $date = date('d/m/Y à H:i', $topic['date_posted']);
+                        $historic .= '<a href="topic.php?action=get-topic&i='. $topic['id'] .'">
+                                        <div class="historic-container">Votre topic: '. $topic['title'] .' - '. $date .'</div>
+                                    </a>';
+                    }
+                } else if ($activity['table_db'] == 'comment') {
+                    $comments = $sql->getCommentByUserId($activity['user_id']);
+                    foreach ($comments as $comment) {
+                        $date = date('d/m/Y à H:i', $comment['date_posted']);
+                        $topics = $sql->getTopicById($comment['topic_id']);
+                        foreach ($topics as $topic) {
+                            $topic_title = $topic['title'];
+                        }
+                        $historic .= '<a href="topic.php?action=get-topic&i='. $comment['topic_id'] .'">
+                                            <div class="historic-container">Votre commentaire sur le topic ' . $topic_title .' - '. $date .'</div>
+                                        </a>';
                     }
                 }
             }
@@ -286,32 +306,34 @@
             } else {
                 header('Location: forum.php?action=forum');
             }
-        }
-        /*else if ($_GET['action'] == 'home') {
-            $vehicles = $sql->getHomeVehicles();
-            //Boucle sur chaque véhicule puis dans chaque mark
-            foreach ($vehicles as $vehicle) {
-                $marks = $sql->getMarksById($vehicle['mark_id']);
+        } else if ($_GET['action'] == 'modify-account') {
+            if ($_SESSION['connected'] && isset($_SESSION['id']) && is_numeric($_SESSION['id'])) {
+                $first_name = htmlspecialchars($_POST['modify-first-name']);
+                $second_name = htmlspecialchars($_POST['modify-second-name']);
+                $mail = htmlspecialchars($_POST['modify-mail']);
 
-                foreach ($marks as $mark) {
-                    $data_vehicles .= '<h2>'. $mark['mark'] .'</h2>
-                                        <div class="card-container">
-                                            <div class="card" style="width: 18rem;">
-                                                <img src="assets/img/vehicles/'. $vehicle['picture'] .'" class="card-img-top" alt="'. $vehicle['model'] .'">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">'. $vehicle['model'] .'</h5>
-                                                    <p class="card-text">'. $vehicle['description'] .'</p>
-                                                    <div class="card-number">
-                                                        <span>'. $vehicle['v_year'] .'</span>
-                                                        <span>'. number_format($vehicle['price']) .'€</span>
-                                                    </div>
-                                                    <a href="#" class="btn btn-success">Ajouter au panier</a>
-                                                </div>
-                                            </div>
-                                        </div>';
+                if (!empty($first_name) && !empty($second_name) && !empty($mail)) {
+                    if (!empty($_POST['modify-password'])) {
+                        $password = htmlspecialchars($_POST['modify-password']);
+                        $password = hash('sha512', $password);
+                        $password = strtoupper($password);
+                        $sql->updateAccountWithPassword($_SESSION['id'], $first_name, $second_name, $mail, $password);
+                    } else {
+                        $sql->updateAccount($_SESSION['id'], $first_name, $second_name, $mail);
+                    }
+
+                    $_SESSION['first_name'] = $first_name;
+                    $_SESSION['second_name'] = $second_name;
+                    $_SESSION['mail'] = $mail;
+                    header('Location: dashboard.php?action=dashboard');
+                } else {
+                    echo 'Tous les champs doivent être remplis';
                 }
+                
+            } else {
+                echo 'Vous devez être connecté';
             }
-        }*/
+        }
     }
 
     if (isset($_POST['submit-add-shop'])) {
@@ -371,6 +393,11 @@
 
             if (!empty($title) && !empty($topic)) {
                 $sql->addTopic($_SESSION['id'], $title, $topic);
+                $topics = $sql->getTopicByTitleAndUser($title, $_SESSION['id']);
+
+                foreach($topics as $topic) {
+                    $sql->addHistoric('topic', $_SESSION['id'], $topic['id']);
+                }
                 header('Location: forum.php?action=forum');
             } else {
                 echo 'Tous les champs doivent êtres remplis';
@@ -385,6 +412,7 @@
         if ($_SESSION['connected'] && isset($_SESSION['id'])) {
             $comment = htmlspecialchars($_POST['comment']);
             $sql->addComment($_SESSION['id'], $_GET['i'], $comment);
+            $sql->addHistoric('comment', $_SESSION['id'], $_GET['i']);
             header('Location: topic.php?action=get-topic&i='. $_GET['i']);
         }
     }

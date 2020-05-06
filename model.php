@@ -129,7 +129,7 @@ class SQL {
     public function getHistoric($user_id) {
         $bdd = $this->connect();
 
-        $select = $bdd->query('SELECT * FROM historic WHERE user_id = "'. $user_id .'"');
+        $select = $bdd->query('SELECT * FROM historic WHERE user_id = "'. $user_id .'" ORDER BY date_action DESC');
         $fetch = $select->fetchAll();
 
         return $fetch;
@@ -164,6 +164,24 @@ class SQL {
         return $fetch;
     }
 
+    public function getTopicByTitleAndUser($title, $user_id) {
+        $bdd = $this->connect();
+
+        $select = $bdd->query('SELECT * FROM topic WHERE title = "'. $title .'" AND user_id = "'. $user_id .'"');
+        $fetch = $select->fetchAll();
+
+        return $fetch;
+    }
+
+    public function getTopicByUserId($user_id) {
+        $bdd = $this->connect();
+
+        $select = $bdd->query('SELECT * FROM topic WHERE user_id = "'. $user_id .'"');
+        $fetch = $select->fetchAll();
+
+        return $fetch;
+    }
+
     public function addComment($user_id, $topic_id, $comment) {
         $bdd = $this->connect();
         
@@ -182,5 +200,37 @@ class SQL {
         $fetch = $select->fetchAll();
 
         return $fetch;
+    }
+
+    public function getCommentByUserId($user_id) {
+        $bdd = $this->connect();
+
+        $select = $bdd->query('SELECT * FROM comment WHERE user_id = "'. $user_id .'"');
+        $fetch = $select->fetchAll();
+
+        return $fetch;
+    }
+
+    public function updateAccount($id, $first_name, $second_name, $mail) {
+        $bdd = $this->connect();
+
+        $update = $bdd->prepare('UPDATE user SET first_name = :first_name, second_name = :second_name, mail = :mail WHERE id = "'. $id .'"');
+        $update->execute(array(
+            'first_name' => $first_name,
+            'second_name' => $second_name,
+            'mail' => $mail
+        ));
+    }
+
+    public function updateAccountWithPassword($id, $first_name, $second_name, $mail, $password) {
+        $bdd = $this->connect();
+
+        $update = $bdd->prepare('UPDATE user SET first_name = :first_name, second_name = :second_name, mail = :mail, password = :password WHERE id = "'. $id .'"');
+        $update->execute(array(
+            'first_name' => $first_name,
+            'second_name' => $second_name,
+            'mail' => $mail,
+            'password' => $password
+        ));
     }
 }

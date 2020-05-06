@@ -43,9 +43,14 @@
                                     <?php
                                 }
                             ?>
-                            <a href="controler.php?action=delete">
-                                <button class="btn btn-danger">Supprimer mon compte</button>
-                            </a>
+                            <div class="btn-group-action">
+                                <a href="modify-account.php">
+                                    <button class="btn btn-warning">Modifier mes informations</button>
+                                </a>
+                                <a href="controler.php?action=delete">
+                                    <button class="btn btn-danger">Supprimer mon compte</button>
+                                </a>
+                            </div>
                         </section>
                         <?php
                             if ($_SESSION['admin']) {
