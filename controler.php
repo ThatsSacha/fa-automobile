@@ -153,32 +153,30 @@
             }
 
             $activities = $sql->getHistoric($_SESSION['id']);
+            
             foreach($activities as $activity) {
                 if ($activity['table_db'] == 'vehicle') {
                     $vehicles = $sql->getVehiclesById($activity['element_id']);
 
                     foreach($vehicles as $vehicle) {
-                        $date = date('d/m/Y à H:i', $vehicle['date_action']);
-                        $historic .= '<div class="historic-container">Achat: '. $vehicle['model'] .' - '. $vehicle['v_year'] .' - '. $vehicle['price'] .'€, le '. $date .'</div>';
+                        $historic .= '<div class="historic-container">Achat: '. $vehicle['model'] .' - '. $vehicle['v_year'] .' - '. $vehicle['price'] .'€, le '. $vehicle['date_action'] .'</div>';
                     }
                 } else if ($activity['table_db'] == 'topic') {
-                    $topics = $sql->getTopicByUserId($activity['user_id']);
+                    $topics = $sql->getTopicById($activity['element_id']);
                     foreach ($topics as $topic) {
-                        $date = date('d/m/Y à H:i', $topic['date_posted']);
                         $historic .= '<a href="topic.php?action=get-topic&i='. $topic['id'] .'">
-                                        <div class="historic-container">Votre topic: '. $topic['title'] .' - '. $date .'</div>
+                                        <div class="historic-container">Votre topic: '. $topic['title'] .' - '. $topic['date_posted'] .'</div>
                                     </a>';
                     }
                 } else if ($activity['table_db'] == 'comment') {
-                    $comments = $sql->getCommentByUserId($activity['user_id']);
+                    $comments = $sql->getCommentById($activity['element_id']);
                     foreach ($comments as $comment) {
-                        $date = date('d/m/Y à H:i', $comment['date_posted']);
                         $topics = $sql->getTopicById($comment['topic_id']);
                         foreach ($topics as $topic) {
                             $topic_title = $topic['title'];
                         }
                         $historic .= '<a href="topic.php?action=get-topic&i='. $comment['topic_id'] .'">
-                                            <div class="historic-container">Votre commentaire sur le topic ' . $topic_title .' - '. $date .'</div>
+                                            <div class="historic-container">Votre commentaire sur le topic ' . $topic_title . '  - '. $comment['date_comment'] .'</div>
                                         </a>';
                     }
                 }

@@ -155,15 +155,6 @@ class SQL {
         return $fetch;
     }
 
-    public function getTopicById($id) {
-        $bdd = $this->connect();
-
-        $select = $bdd->query('SELECT * FROM topic WHERE id = "'. $id .'"');
-        $fetch = $select->fetchAll();
-
-        return $fetch;
-    }
-
     public function getTopicByTitleAndUser($title, $user_id) {
         $bdd = $this->connect();
 
@@ -173,10 +164,10 @@ class SQL {
         return $fetch;
     }
 
-    public function getTopicByUserId($user_id) {
+    public function getTopicById($id) {
         $bdd = $this->connect();
 
-        $select = $bdd->query('SELECT * FROM topic WHERE user_id = "'. $user_id .'"');
+        $select = $bdd->query('SELECT * FROM topic WHERE id = "'. $id .'"');
         $fetch = $select->fetchAll();
 
         return $fetch;
@@ -202,10 +193,10 @@ class SQL {
         return $fetch;
     }
 
-    public function getCommentByUserId($user_id) {
+    public function getCommentById($element_id) {
         $bdd = $this->connect();
 
-        $select = $bdd->query('SELECT * FROM comment WHERE user_id = "'. $user_id .'"');
+        $select = $bdd->query('SELECT * FROM comment WHERE id = "'. $element_id .'"');
         $fetch = $select->fetchAll();
 
         return $fetch;
